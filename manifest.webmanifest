@@ -1,0 +1,32 @@
+{
+  "name": "صندوق المقبرة والشادر - قرية الحرية",
+  "short_name": "صندوق المقبرة والشادر",
+  "description": "برنامج محلي لإدارة صندوق المقبرة والشادر والمشتركين والقبض والصرف والتقارير.",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f8f5ee",
+  "theme_color": "#174f3b",
+  "categories": [
+    "finance",
+    "productivity",
+    "utilities"
+  ],
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

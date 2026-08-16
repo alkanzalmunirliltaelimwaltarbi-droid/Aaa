@@ -1,0 +1,2161 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#164d3a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="صندوق المقبرة والشادر">
+    <meta name="application-name" content="صندوق المقبرة والشادر">
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="icon" href="./icons/icon-192.png" sizes="192x192">
+    <link rel="apple-touch-icon" href="./icons/icon-192.png">
+
+    <title>صندوق المقبرة والشادر - قرية الحرية</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #0d9488;
+            --primary-dark: #0f766e;
+            --accent: #d97706;
+            --bg-color: #f1f5f9;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border-color: #e2e8f0;
+            --header-bg: rgba(255, 255, 255, 0.85);
+        }
+        .dark {
+            --primary: #14b8a6;
+            --accent: #f59e0b;
+            --bg-color: #020617;
+            --card-bg: #0f172a;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --border-color: #1e293b;
+            --header-bg: rgba(15, 23, 42, 0.85);
+        }
+        body {
+            font-family: 'Cairo', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color 0.3s, color 0.3s;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .header-blur {
+            background-color: var(--header-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.05);
+        }
+        .nav-tab {
+            position: relative;
+            padding: 1rem 1.25rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            transition: color 0.3s;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .nav-tab:hover {
+            color: var(--primary);
+        }
+        .nav-tab.active {
+            color: var(--primary);
+        }
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            right: 0;
+            left: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 3px 3px 0 0;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            transition: all 0.2s;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);
+        }
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+            transition: all 0.2s;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        .input-field {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            border-radius: 0.5rem;
+            padding: 0.6rem 1rem;
+            transition: all 0.2s;
+            width: 100%;
+        }
+        .input-field:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
+            background-color: var(--card-bg);
+        }
+        .data-table thead th {
+            background-color: var(--bg-color);
+            color: var(--text-muted);
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .data-table tbody tr {
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s;
+        }
+        .data-table tbody tr:hover {
+            background-color: rgba(13, 148, 136, 0.05);
+        }
+        .modal-bg {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+        }
+        .modal-content {
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-muted);
+        }
+        .footer {
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 1rem 0;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: auto;
+        }
+        .footer span {
+            color: var(--primary);
+            font-weight: 700;
+        }
+        .payer-select-wrapper .extra-payer-input {
+            margin-top: 0.5rem;
+            display: none;
+        }
+        .payer-select-wrapper .extra-payer-input.active {
+            display: block;
+        }
+        .badge-fund {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .badge-fund-general { background: #e2e8f0; color: #1e293b; }
+        .badge-fund-cemetery { background: #ccfbf1; color: #0f766e; }
+        .badge-fund-shadar { background: #fef3c7; color: #b45309; }
+        .dark .badge-fund-general { background: #1e293b; color: #cbd5e1; }
+        .dark .badge-fund-cemetery { background: #134e4a; color: #99f6e4; }
+        .dark .badge-fund-shadar { background: #78350f; color: #fcd34d; }
+        .stamp-preview {
+            max-width: 120px;
+            max-height: 120px;
+            border: 2px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 4px;
+            margin-top: 8px;
+            background: var(--bg-color);
+        }
+        .stamp-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+        }
+        .search-box {
+            position: relative;
+            max-width: 320px;
+        }
+        .search-box .fa-search {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+        }
+        .search-box input {
+            padding-right: 2.5rem;
+        }
+        .transaction-table-wrap {
+            margin-top: 1.5rem;
+        }
+        .section-subtitle {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+    
+        /* ================= PWA / MOBILE APP UI ================= */
+        :root{
+            --app-green:#174f3b;
+            --app-green-2:#0f3f2e;
+            --app-gold:#c9a64d;
+            --app-cream:#f8f5ee;
+            --app-ink:#1d2421;
+            --app-soft:#eef4ef;
+        }
+        html{scroll-behavior:smooth}
+        body{
+            background:var(--app-cream);
+            -webkit-tap-highlight-color:transparent;
+            overscroll-behavior-y:none;
+        }
+        button,input,select,textarea{font-family:inherit}
+        .mobile-app-shell{display:none}
+        .mobile-bottom-nav,.mobile-more-sheet,.mobile-search-panel{display:none}
+        .pwa-status{
+            position:fixed;left:12px;bottom:14px;z-index:200;
+            display:none;align-items:center;gap:7px;padding:7px 11px;
+            border-radius:999px;background:rgba(23,79,59,.92);color:#fff;
+            font-size:11px;box-shadow:0 8px 22px rgba(0,0,0,.15)
+        }
+        .pwa-status.show{display:flex}
+        .pwa-status .dot{width:7px;height:7px;border-radius:50%;background:#8fe0b2}
+        .pwa-install-btn{display:none!important}
+        .pwa-install-btn.ready{display:inline-flex!important}
+        .about-app{line-height:1.9}
+        @media (max-width: 767px){
+            body{padding-bottom:78px}
+            .header-blur{
+                display:none!important
+            }
+            main{
+                padding:0!important;
+                width:100%!important;
+                max-width:none!important;
+            }
+            .mobile-app-shell{
+                display:block;
+                position:relative;
+                min-height:330px;
+                padding:18px 18px 58px;
+                overflow:hidden;
+                color:#fff;
+                background:
+                    radial-gradient(circle at 85% 20%,rgba(255,255,255,.10),transparent 22%),
+                    radial-gradient(circle at 10% 65%,rgba(201,166,77,.12),transparent 30%),
+                    linear-gradient(160deg,#173f31 0%,#174f3b 52%,#0f3f2e 100%);
+                border-radius:0 0 32px 32px;
+                box-shadow:0 10px 30px rgba(15,63,46,.20);
+            }
+            .mobile-app-shell:before{
+                content:"";
+                position:absolute;
+                width:230px;height:230px;
+                right:-70px;top:-40px;
+                border:1px solid rgba(255,255,255,.08);
+                border-radius:48% 48% 0 0;
+                transform:rotate(8deg);
+                box-shadow:inset 0 0 0 20px rgba(255,255,255,.025);
+            }
+            .mobile-app-shell:after{
+                content:"☪";
+                position:absolute;right:22px;top:42px;
+                font-size:92px;line-height:1;
+                color:rgba(255,255,255,.055);
+            }
+            .mobile-topbar{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between}
+            .mobile-top-actions{display:flex;gap:10px;direction:rtl}
+            .mobile-circle-btn{
+                width:46px;height:46px;border:1px solid rgba(255,255,255,.10);
+                border-radius:16px;background:rgba(255,255,255,.10);
+                color:#fff;display:grid;place-items:center;font-size:21px;
+                backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)
+            }
+            .mobile-circle-btn:active{transform:scale(.96)}
+            .mobile-brand-mini{font-size:12px;color:rgba(255,255,255,.76);font-weight:700}
+            .mobile-hero-copy{position:relative;z-index:2;text-align:center;margin-top:42px}
+            .mobile-hero-copy h1{font-size:34px;line-height:1.2;margin:0;font-weight:900;letter-spacing:-.8px}
+            .mobile-hero-copy .verse{
+                color:#e3c879;font-size:18px;font-weight:700;margin:13px 0 16px;
+                line-height:1.8
+            }
+            .mobile-date-pill{
+                display:inline-flex;align-items:center;justify-content:center;
+                padding:9px 18px;border:1px solid rgba(255,255,255,.15);
+                border-radius:999px;background:rgba(255,255,255,.09);
+                color:rgba(255,255,255,.88);font-size:14px;font-weight:700;
+                backdrop-filter:blur(10px)
+            }
+            .mobile-current-card{
+                position:absolute;z-index:5;left:18px;right:18px;bottom:-38px;
+                min-height:86px;padding:16px 18px;border-radius:26px;
+                background:#fff;color:#202523;box-shadow:0 12px 28px rgba(0,0,0,.16);
+                display:flex;align-items:center;justify-content:space-between
+            }
+            .mobile-current-card .label{font-size:12px;color:#8b928e;font-weight:700}
+            .mobile-current-card .value{font-size:20px;font-weight:900;margin-top:3px}
+            .mobile-current-icon{
+                width:50px;height:50px;border-radius:50%;display:grid;place-items:center;
+                background:#edf4ef;color:var(--app-green);font-size:22px
+            }
+            .mobile-dashboard-body{padding:62px 18px 20px}
+            .mobile-section-title{display:flex;align-items:center;justify-content:space-between;margin:4px 2px 14px}
+            .mobile-section-title h3{margin:0;font-size:22px;font-weight:900;color:#252b28}
+            .mobile-section-title span{font-size:11px;color:#909691}
+            .mobile-quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+            .mobile-quick-card{
+                min-height:105px;background:#fff;border:1px solid #ece8df;
+                border-radius:22px;padding:15px;display:flex;flex-direction:column;
+                justify-content:space-between;position:relative;overflow:hidden;
+                box-shadow:0 5px 16px rgba(40,49,44,.07);text-align:right
+            }
+            .mobile-quick-card.wide{grid-column:span 2;min-height:92px}
+            .mobile-quick-card .qicon{
+                width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+                background:#edf4ef;color:var(--app-green);font-size:18px
+            }
+            .mobile-quick-card.gold .qicon{background:#fbf5e8;color:#a88a3c}
+            .mobile-quick-card h4{margin:8px 0 0;font-size:16px;font-weight:900;color:#292e2b}
+            .mobile-quick-card p{margin:2px 0 0;font-size:11px;color:#9a9f9b}
+            .mobile-quick-card:after{
+                content:"";position:absolute;left:0;top:0;width:4px;height:100%;
+                background:var(--app-green);border-radius:0 4px 4px 0
+            }
+            .mobile-quick-card.gold:after{background:var(--app-gold)}
+            #view-dashboard>.mb-8{display:none}
+            #view-dashboard>.grid:first-of-type{
+                margin:0!important;padding:0 18px 18px;
+                display:grid!important;grid-template-columns:1fr 1fr!important;gap:10px!important
+            }
+            #view-dashboard>.grid:first-of-type .card{padding:15px!important;border-radius:18px!important}
+            #view-dashboard>.grid:first-of-type .card h3{font-size:16px!important}
+            #view-dashboard>.grid:first-of-type .card p{font-size:10px!important}
+            #view-dashboard>.grid:first-of-type .card .p-3{padding:9px!important}
+            #view-dashboard>.grid:nth-of-type(2){padding:0 18px 20px}
+            #view-dashboard>.grid:nth-of-type(2) .card{padding:16px!important;border-radius:20px!important}
+            #view-dashboard canvas{max-height:190px!important}
+            .view-section:not(#view-dashboard){padding:22px 18px 28px}
+            .view-section:not(#view-dashboard) .text-3xl{font-size:25px!important}
+            .view-section .card{border-radius:20px!important}
+            .data-table{min-width:700px}
+            .card.rounded-2xl.overflow-hidden{overflow-x:auto}
+            .mobile-bottom-nav{
+                display:grid;grid-template-columns:repeat(5,1fr);
+                position:fixed;z-index:150;left:0;right:0;bottom:0;
+                padding:8px 8px calc(8px + env(safe-area-inset-bottom));
+                background:rgba(255,255,255,.94);border-top:1px solid #e8e5de;
+                backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)
+            }
+            .mobile-nav-item{
+                border:0;background:transparent;color:#9a9f9b;min-height:56px;
+                display:flex;flex-direction:column;align-items:center;justify-content:center;
+                gap:3px;font-size:10px;font-weight:700
+            }
+            .mobile-nav-item i{font-size:20px}
+            .mobile-nav-item.active{color:var(--app-green)}
+            .mobile-nav-item.active i{transform:translateY(-1px)}
+            .mobile-more-sheet{
+                position:fixed;inset:0;z-index:180;background:rgba(10,20,16,.45);
+                display:none;align-items:flex-end;backdrop-filter:blur(4px)
+            }
+            .mobile-more-sheet.open{display:flex}
+            .mobile-more-panel{
+                width:100%;background:#fff;border-radius:28px 28px 0 0;
+                padding:16px 18px calc(18px + env(safe-area-inset-bottom));
+                max-height:78vh;overflow:auto
+            }
+            .more-handle{width:44px;height:5px;background:#d8d8d4;border-radius:10px;margin:0 auto 18px}
+            .more-title{font-weight:900;font-size:20px;margin-bottom:14px;color:#252b28}
+            .more-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+            .more-link{
+                border:1px solid #ebe8e0;background:#faf9f6;border-radius:18px;
+                padding:14px 10px;text-align:center;font-weight:800;color:#343a36
+            }
+            .more-link i{display:block;font-size:19px;color:var(--app-green);margin-bottom:6px}
+            .mobile-search-panel{
+                position:fixed;z-index:170;top:0;left:0;right:0;padding:12px 14px;
+                background:rgba(255,255,255,.96);border-bottom:1px solid #e8e5de;
+                box-shadow:0 8px 20px rgba(0,0,0,.08)
+            }
+            .mobile-search-panel.open{display:block}
+            .mobile-search-row{display:flex;gap:8px}
+            .mobile-search-row input{flex:1}
+            .mobile-search-row button{width:46px;border:0;border-radius:14px;background:#eef3ef;color:var(--app-green)}
+            .footer{display:none}
+        }
+        @media (min-width:768px){
+            .mobile-app-shell,.mobile-bottom-nav,.mobile-more-sheet,.mobile-search-panel{display:none!important}
+        }
+        @media (display-mode: standalone){
+            .header-blur{padding-top:env(safe-area-inset-top)}
+        }
+
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header-blur sticky top-0 z-50 no-print">
+        <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3 space-x-reverse">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-teal-600 to-amber-500 flex items-center justify-center text-white shadow-lg">
+                        <i class="fas fa-mosque text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-bold text-lg leading-tight text-slate-800 dark:text-white">صندوق المقبرة والشادر</h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400">قرية الحرية</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4 space-x-reverse">
+                    <div class="relative hidden md:block">
+                        <input type="text" id="global-search" oninput="searchTable()" placeholder="بحث سريع..." class="input-field !py-2 !pl-10 w-64 text-sm">
+                        <i class="fas fa-search absolute left-3 top-3 text-slate-400"></i>
+                    </div>
+                    <button onclick="toggleTheme()" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300">
+                        <i class="fas fa-moon text-lg dark:hidden"></i>
+                        <i class="fas fa-sun text-lg hidden dark:block text-amber-400"></i>
+                    </button>
+                </div>
+            </div>
+            <nav class="overflow-x-auto flex items-center gap-2 -mb-px no-print">
+                <button onclick="switchView('dashboard')" class="nav-tab active" data-view="dashboard"><i class="fas fa-tachometer-alt ml-2"></i>لوحة التحكم</button>
+                <button onclick="switchView('members')" class="nav-tab" data-view="members"><i class="fas fa-users ml-2"></i>المشتركين</button>
+                <button onclick="switchView('receipts')" class="nav-tab" data-view="receipts"><i class="fas fa-file-invoice-dollar ml-2"></i>سندات القبض</button>
+                <button onclick="switchView('payments')" class="nav-tab" data-view="payments"><i class="fas fa-money-check-alt ml-2"></i>سندات الصرف</button>
+                <button onclick="switchView('cemetery')" class="nav-tab" data-view="cemetery"><i class="fas fa-mosque ml-2"></i>قسم المقبرة</button>
+                <button onclick="switchView('shadar')" class="nav-tab" data-view="shadar"><i class="fas fa-archway ml-2"></i>قسم الشادر</button>
+                <button onclick="switchView('reports')" class="nav-tab" data-view="reports"><i class="fas fa-chart-pie ml-2"></i>التقارير</button>
+                <button onclick="switchView('backup')" class="nav-tab" data-view="backup"><i class="fas fa-database ml-2"></i>النسخ الاحتياطي</button>
+                <button onclick="switchView('settings')" class="nav-tab" data-view="settings"><i class="fas fa-cog ml-2"></i>الإعدادات</button>
+            </nav>
+        </div>
+    </header>
+
+
+    <!-- واجهة الهاتف المستوحاة من المرجع البصري -->
+    <section class="mobile-app-shell no-print" aria-label="واجهة التطبيق">
+        <div class="mobile-topbar">
+            <div class="mobile-brand-mini">قرية الحرية • ١٤٤٨هـ</div>
+            <div class="mobile-top-actions">
+                <button class="mobile-circle-btn" onclick="toggleFavorite()" aria-label="المفضلة"><i id="favorite-icon" class="far fa-heart"></i></button>
+                <button class="mobile-circle-btn" onclick="showAboutApp()" aria-label="معلومات التطبيق"><i class="fas fa-info"></i></button>
+                <button class="mobile-circle-btn" onclick="openMoreMenu()" aria-label="القائمة"><i class="fas fa-bars"></i></button>
+            </div>
+        </div>
+        <div class="mobile-hero-copy">
+            <h1>صندوق المقبرة والشادر</h1>
+            <div class="verse">وَمَا تَزَالُ عَبْدِي يَتَقَرَّبُ إِلَيَّ بِالنَّوَافِلِ حَتَّى أُحِبَّهُ</div>
+            <div class="mobile-date-pill" id="mobile-date-pill">الأحد، ١٦ أغسطس ٢٠٢٦</div>
+        </div>
+        <div class="mobile-current-card">
+            <div>
+                <div class="label">الحالة المالية الحالية</div>
+                <div class="value" id="mobile-balance">0 ل.س</div>
+            </div>
+            <div class="mobile-current-icon"><i class="fas fa-wallet"></i></div>
+        </div>
+    </section>
+
+    <main class="flex-1 max-w-[1600px] w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Dashboard -->
+        <div id="view-dashboard" class="view-section">
+
+            <div class="mobile-dashboard-body no-print">
+                <div class="mobile-section-title">
+                    <h3>الوصول السريع</h3><span>كل ما تحتاجه في مكان واحد</span>
+                </div>
+                <div class="mobile-quick-grid">
+                    <button class="mobile-quick-card wide" onclick="switchView('receipts')">
+                        <span class="qicon"><i class="fas fa-file-invoice-dollar"></i></span>
+                        <div><h4>سندات القبض</h4><p>إضافة ومتابعة الإيرادات والاشتراكات</p></div>
+                    </button>
+                    <button class="mobile-quick-card gold" onclick="switchView('members')">
+                        <span class="qicon"><i class="fas fa-users"></i></span>
+                        <div><h4>المشتركون</h4><p>إدارة بيانات المشتركين</p></div>
+                    </button>
+                    <button class="mobile-quick-card" onclick="switchView('payments')">
+                        <span class="qicon"><i class="fas fa-money-check-alt"></i></span>
+                        <div><h4>سندات الصرف</h4><p>تسجيل المصروفات بدقة</p></div>
+                    </button>
+                    <button class="mobile-quick-card gold" onclick="switchView('cemetery')">
+                        <span class="qicon"><i class="fas fa-mosque"></i></span>
+                        <div><h4>قسم المقبرة</h4><p>الحركة المالية والصيانة</p></div>
+                    </button>
+                    <button class="mobile-quick-card" onclick="switchView('shadar')">
+                        <span class="qicon"><i class="fas fa-archway"></i></span>
+                        <div><h4>قسم الشادر</h4><p>التجهيزات والإيرادات</p></div>
+                    </button>
+                    <button class="mobile-quick-card wide gold" onclick="switchView('reports')">
+                        <span class="qicon"><i class="fas fa-chart-pie"></i></span>
+                        <div><h4>التقارير والتصدير</h4><p>تقارير مالية وطباعة وتصدير Excel</p></div>
+                    </button>
+                </div>
+            </div>
+
+            <div class="mb-8">
+                <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white">لوحة المعلومات</h2>
+                <p class="text-slate-500 mt-1">نظرة عامة على أداء الصندوق المالي</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="card rounded-2xl p-6 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-24 h-24 bg-teal-500/10 rounded-full -mt-8 -ml-8"></div>
+                    <div class="flex justify-between items-start relative z-10">
+                        <div><p class="text-slate-500 text-sm font-semibold">الرصيد (ل.س)</p><h3 class="text-2xl font-extrabold text-teal-600 mt-2" id="balance-syp">0 ل.س</h3></div>
+                        <div class="p-3 bg-teal-100 text-teal-600 rounded-xl shadow-sm"><i class="fas fa-wallet text-xl"></i></div>
+                    </div>
+                </div>
+                <div class="card rounded-2xl p-6 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-24 h-24 bg-blue-500/10 rounded-full -mt-8 -ml-8"></div>
+                    <div class="flex justify-between items-start relative z-10">
+                        <div><p class="text-slate-500 text-sm font-semibold">الرصيد ($)</p><h3 class="text-2xl font-extrabold text-blue-600 mt-2" id="balance-usd">0 $</h3></div>
+                        <div class="p-3 bg-blue-100 text-blue-600 rounded-xl shadow-sm"><i class="fas fa-dollar-sign text-xl"></i></div>
+                    </div>
+                </div>
+                <div class="card rounded-2xl p-6 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-24 h-24 bg-amber-500/10 rounded-full -mt-8 -ml-8"></div>
+                    <div class="flex justify-between items-start relative z-10">
+                        <div><p class="text-slate-500 text-sm font-semibold">المشتركون</p><h3 class="text-2xl font-extrabold text-amber-600 mt-2" id="total-members">0</h3></div>
+                        <div class="p-3 bg-amber-100 text-amber-600 rounded-xl shadow-sm"><i class="fas fa-users text-xl"></i></div>
+                    </div>
+                </div>
+                <div class="card rounded-2xl p-6 relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-24 h-24 bg-red-500/10 rounded-full -mt-8 -ml-8"></div>
+                    <div class="flex justify-between items-start relative z-10">
+                        <div><p class="text-slate-500 text-sm font-semibold">مصروفات اليوم</p><h3 class="text-2xl font-extrabold text-red-600 mt-2" id="today-expenses">0</h3></div>
+                        <div class="p-3 bg-red-100 text-red-600 rounded-xl shadow-sm"><i class="fas fa-arrow-down text-xl"></i></div>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <div class="card rounded-2xl p-6 lg:col-span-2">
+                    <h4 class="font-bold text-lg text-slate-800 dark:text-white mb-6">حركة الصندوق (6 أشهر)</h4>
+                    <canvas id="cashFlowChart" height="100"></canvas>
+                </div>
+                <div class="card rounded-2xl p-6">
+                    <h4 class="font-bold text-lg text-slate-800 dark:text-white mb-6">توزيع الإيرادات</h4>
+                    <canvas id="incomeTypeChart" height="160"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Members -->
+        <div id="view-members" class="view-section hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <div><h2 class="text-3xl font-extrabold text-slate-800 dark:text-white">إدارة المشتركين</h2><p class="text-slate-500 mt-1">قائمة بأهالي قرية الحرية المشتركين في الصندوق</p></div>
+                <button onclick="openMemberModal()" class="btn-primary px-6 py-3 rounded-xl font-bold flex items-center shadow-lg"><i class="fas fa-plus ml-2"></i> إضافة مشترك جديد</button>
+            </div>
+            <!-- بحث المشتركين -->
+            <div class="flex flex-wrap items-center gap-4 mb-4">
+                <div class="search-box flex-1 min-w-[200px]">
+                    <input type="text" id="search-members" placeholder="بحث في المشتركين (الاسم، الهاتف، الحالة، الاشتراك)" class="input-field" oninput="searchMembers()">
+                    <i class="fas fa-search"></i>
+                </div>
+                <button onclick="document.getElementById('search-members').value='';searchMembers();" class="text-slate-500 hover:text-slate-700 text-sm">إلغاء</button>
+            </div>
+            <div class="card rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="data-table w-full text-right" id="members-table">
+                        <thead><tr><th class="p-4">الرقم</th><th class="p-4">الاسم الثلاثي</th><th class="p-4">رقم الهاتف</th><th class="p-4">نوع الاشتراك</th><th class="p-4">الحالة</th><th class="p-4 text-center">إجراءات</th></tr></thead>
+                        <tbody id="members-table-body" class="text-slate-700 dark:text-slate-300"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Receipts -->
+        <div id="view-receipts" class="view-section hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <div><h2 class="text-3xl font-extrabold text-slate-800 dark:text-white">سندات القبض</h2><p class="text-slate-500 mt-1">إدارة الإيرادات الواردة للصندوق</p></div>
+                <button onclick="openTransactionModal('receipt')" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold flex items-center shadow-lg transition"><i class="fas fa-plus ml-2"></i> إنشاء سند قبض</button>
+            </div>
+            <!-- بحث سندات القبض -->
+            <div class="flex flex-wrap items-center gap-4 mb-4">
+                <div class="search-box flex-1 min-w-[200px]">
+                    <input type="text" id="search-receipts" placeholder="بحث في سندات القبض (الرقم، الدافع، البيان، المبلغ...)" class="input-field" oninput="searchReceipts()">
+                    <i class="fas fa-search"></i>
+                </div>
+                <button onclick="document.getElementById('search-receipts').value='';searchReceipts();" class="text-slate-500 hover:text-slate-700 text-sm">إلغاء</button>
+            </div>
+            <div class="card rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="data-table w-full text-right" id="receipts-table">
+                        <thead>
+                            <tr><th class="p-4">رقم السند</th><th class="p-4">التاريخ</th><th class="p-4">الدافع</th><th class="p-4">البيان</th><th class="p-4">المبلغ</th><th class="p-4">العملة</th><th class="p-4">الصندوق</th><th class="p-4 text-center">إجراءات</th></tr>
+                        </thead>
+                        <tbody id="receipts-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payments -->
+        <div id="view-payments" class="view-section hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
+                <div><h2 class="text-3xl font-extrabold text-slate-800 dark:text-white">سندات الصرف</h2><p class="text-slate-500 mt-1">إدارة المصروفات والمقبوضات الخارجة من الصندوق</p></div>
+                <button onclick="openTransactionModal('payment')" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-bold flex items-center shadow-lg transition"><i class="fas fa-plus ml-2"></i> إنشاء سند صرف</button>
+            </div>
+            <!-- بحث سندات الصرف -->
+            <div class="flex flex-wrap items-center gap-4 mb-4">
+                <div class="search-box flex-1 min-w-[200px]">
+                    <input type="text" id="search-payments" placeholder="بحث في سندات الصرف (الرقم، المستفيد، البيان، المبلغ...)" class="input-field" oninput="searchPayments()">
+                    <i class="fas fa-search"></i>
+                </div>
+                <button onclick="document.getElementById('search-payments').value='';searchPayments();" class="text-slate-500 hover:text-slate-700 text-sm">إلغاء</button>
+            </div>
+            <div class="card rounded-2xl overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="data-table w-full text-right" id="payments-table">
+                        <thead><tr><th class="p-4">رقم السند</th><th class="p-4">التاريخ</th><th class="p-4">المستفيد</th><th class="p-4">البيان</th><th class="p-4">المبلغ</th><th class="p-4">العملة</th><th class="p-4">الصندوق</th><th class="p-4 text-center">إجراءات</th></tr></thead>
+                        <tbody id="payments-table-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cemetery -->
+        <div id="view-cemetery" class="view-section hidden">
+            <div class="mb-8"><h2 class="text-3xl font-extrabold text-slate-800 dark:text-white">قسم المقبرة</h2><p class="text-slate-500 mt-1">إيرادات ومصروفات وصيانة المقبرة</p></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card rounded-2xl p-8 text-center hover:-translate-y-1 transition">
+                    <div class="w-16 h-16 mx-auto bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mb-4"><i class="fas fa-arrow-down text-2xl"></i></div>
+                    <h3 class="font-bold text-slate-800 dark:text-white text-lg">إيرادات المقبرة</h3>
+                    <p class="text-3xl font-extrabold text-green-600 mt-2" id="cemetery-income">0 <span class="text-sm">ل.س</span></p>
+                </div>
+                <div class="card rounded-2xl p-8 text-center hover:-translate-y-1 transition">
+                    <div class="w-16 h-16 mx-auto bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mb-4"><i class="fas fa-arrow-up text-2xl"></i></div>
+                    <h3 class="font-bold text-slate-800 dark:text-white text-lg">مصروفات المقبرة</h3>
+                    <p class="text-3xl font-extrabold text-red-600 mt-2" id="cemetery-expense">0 <span class="text-sm">ل.س</span></p>
+                </div>
+                <div class="card rounded-2xl p-8 text-center hover:-translate-y-1 transition">
+                    <div class="w-16 h-16 mx-auto bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center mb-4"><i class="fas fa-tools text-2xl"></i></div>
+                    <h3 class="font-bold text-slate-800 dark:text-white text-lg">مستلزمات وصيانة</h3>
+                    <p class="text-3xl font-extrabold text-amber-600 mt-2" id="cemetery-maintenance">0 <span class="text-sm">عملية</span></p>
+                </div>
+            </div>
+            <!-- جدول معاملات المقبرة مع بحث -->
+            <div class="transaction-table-wrap">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-3">
+                    <h4 class="font-bold text-lg text-slate-800 dark:text-white">جميع معاملات المقبرة</h4>
+                    <div class="search-box flex-1 min-w-[180px] max-w-sm">
+                        <input type="text" id="search-cemetery" placeholder="بحث في معاملات المقبرة..." class="input-field" oninput="searchCemetery()">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                <div class="card rounded-2xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="data-table w-full text-right" id="cemetery-transactions-table">
+                            <thead><tr><th class="p-4">#</th><th class="p-4">التاريخ</th><th class="p-4">النوع</th><th class="p-4">الشخص</th><th class="p-4">البيان</th><th class="p-4">المبلغ</th><th class="p-4">العملة</th></tr></thead>
+                            <tbody id="cemetery-transactions-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Shadar -->
+        <div id="view-shadar" class="view-section hidden">
+            <div class="mb-8"><h2 class="text-3xl font-extrabold text-slate-800 dark:text-white">قسم الشادر</h2><p class="text-slate-500 mt-1">إيرادات ومصروفات وتجهيزات الشادر</p></div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="card rounded-2xl p-8 text-center hover:-translate-y-1 transition">
+                    <div class="w-16 h-16 mx-auto bg-green-100 text-green-600 rounded-2xl flex items-center justify-center mb-4"><i class="fas fa-arrow-down text-2xl"></i></div>
+                    <h3 class="font-bold text-slate-800 dark:text-white text-lg">إيرادات الشادر</h3>
+                    <p class="text-3xl font-extrabold text-green-600 mt-2" id="shadar-income">0 <span class="text-sm">ل.س</span></p>
+                </div>
+                <div class="card rounded-2xl p-8 text-center hover:-translate-y-1 transition">
+                    <div class="w-16 h-16 mx-auto bg-red-100 text-red-600 rounded-2xl flex items-center justify-center mb-4"><i class="fas fa-arrow-up text-2xl"></i></div>
+                    <h3 class="font-bold text-slate-800 dark:text-white text-lg">مصروفات الشادر</h3>
+                    <p class="text-3xl font-extrabold text-red-600 mt-2" id="shadar-expense">0 <span class="text-sm">ل.س</span></p>
+                </div>
+                <div class="card rounded-2xl p-8 text-center hover:-translate-y-1 transition">
+                    <div class="w-16 h-16 mx-auto bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center mb-4"><i class="fas fa-chair text-2xl"></i></div>
+                    <h3 class="font-bold text-slate-800 dark:text-white text-lg">التجهيزات</h3>
+                    <p class="text-3xl font-extrabold text-blue-600 mt-2" id="shadar-equipment">0 <span class="text-sm">صنف</span></p>
+                </div>
+            </div>
+            <!-- جدول معاملات الشادر مع بحث -->
+            <div class="transaction-table-wrap">
+                <div class="flex flex-wrap items-center justify-between gap-4 mb-3">
+                    <h4 class="font-bold text-lg text-slate-800 dark:text-white">جميع معاملات الشادر</h4>
+                    <div class="search-box flex-1 min-w-[180px] max-w-sm">
+                        <input type="text" id="search-shadar" placeholder="بحث في معاملات الشادر..." class="input-field" oninput="searchShadar()">
+                        <i class="fas fa-search"></i>
+                    </div>
+                </div>
+                <div class="card rounded-2xl overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="data-table w-full text-right" id="shadar-transactions-table">
+                            <thead><tr><th class="p-4">#</th><th class="p-4">التاريخ</th><th class="p-4">النوع</th><th class="p-4">الشخص</th><th class="p-4">البيان</th><th class="p-4">المبلغ</th><th class="p-4">العملة</th></tr></thead>
+                            <tbody id="shadar-transactions-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports -->
+        <div id="view-reports" class="view-section hidden">
+            <div class="mb-8">
+                <h2 class="text-3xl font-extrabold text-slate-800 dark:text-white">مركز التقارير</h2>
+                <p class="text-slate-500 mt-1">إنشاء وطباعة وتصدير التقارير المالية المفصلة</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- تقرير الإيرادات -->
+                <div class="card rounded-2xl p-6 hover:border-teal-500 transition">
+                    <div class="flex items-center mb-4">
+                        <div class="p-3 bg-green-100 text-green-600 rounded-xl ml-4"><i class="fas fa-arrow-down text-xl"></i></div>
+                        <h4 class="font-bold text-lg text-slate-800 dark:text-white">تقرير الإيرادات</h4>
+                    </div>
+                    <p class="text-slate-500 text-sm mb-4">عرض جميع سندات القبض (الإيرادات) مفصلة.</p>
+                    <button onclick="generateIncomeReport()" class="btn-primary w-full py-2 rounded-lg font-semibold">عرض التقرير</button>
+                </div>
+                <!-- تقرير الصرفيات -->
+                <div class="card rounded-2xl p-6 hover:border-red-500 transition">
+                    <div class="flex items-center mb-4">
+                        <div class="p-3 bg-red-100 text-red-600 rounded-xl ml-4"><i class="fas fa-arrow-up text-xl"></i></div>
+                        <h4 class="font-bold text-lg text-slate-800 dark:text-white">تقرير الصرفيات</h4>
+                    </div>
+                    <p class="text-slate-500 text-sm mb-4">عرض جميع سندات الصرف (المصروفات) مفصلة.</p>
+                    <button onclick="generateExpenseReport()" class="bg-red-600 hover:bg-red-700 text-white w-full py-2 rounded-lg font-semibold transition">عرض التقرير</button>
+                </div>
+                <!-- تقرير المقبرة -->
+                <div class="card rounded-2xl p-6 hover:border-teal-500 transition">
+                    <div class="flex items-center mb-4">
+                        <div class="p-3 bg-amber-100 text-amber-600 rounded-xl ml-4"><i class="fas fa-mosque text-xl"></i></div>
+                        <h4 class="font-bold text-lg text-slate-800 dark:text-white">تقرير المقبرة</h4>
+                    </div>
+                    <p class="text-slate-500 text-sm mb-4">عرض إيرادات ومصروفات المقبرة.</p>
+                    <button onclick="generateCemeteryReport()" class="btn-primary w-full py-2 rounded-lg font-semibold">عرض التقرير</button>
+                </div>
+                <!-- تقرير الشادر -->
+                <div class="card rounded-2xl p-6 hover:border-teal-500 transition">
+                    <div class="flex items-center mb-4">
+                        <div class="p-3 bg-blue-100 text-blue-600 rounded-xl ml-4"><i class="fas fa-archway text-xl"></i></div>
+                        <h4 class="font-bold text-lg text-slate-800 dark:text-white">تقرير الشادر</h4>
+                    </div>
+                    <p class="text-slate-500 text-sm mb-4">عرض إيرادات ومصروفات الشادر.</p>
+                    <button onclick="generateShadarReport()" class="btn-primary w-full py-2 rounded-lg font-semibold">عرض التقرير</button>
+                </div>
+            </div>
+            <!-- تقارير إضافية -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+                <div class="card rounded-2xl p-6 hover:border-teal-500 transition">
+                    <div class="flex items-center mb-4"><div class="p-3 bg-teal-100 text-teal-600 rounded-xl ml-4"><i class="fas fa-exchange-alt text-xl"></i></div><h4 class="font-bold text-lg text-slate-800 dark:text-white">تقرير شامل (الكل)</h4></div>
+                    <p class="text-slate-500 text-sm mb-4">عرض جميع المعاملات (قبض وصرف) بدون تصفية.</p>
+                    <button onclick="generateReport()" class="btn-primary w-full py-2 rounded-lg font-semibold">عرض التقرير</button>
+                </div>
+                <div class="card rounded-2xl p-6 hover:border-teal-500 transition">
+                    <div class="flex items-center mb-4"><div class="p-3 bg-blue-100 text-blue-600 rounded-xl ml-4"><i class="fas fa-user text-xl"></i></div><h4 class="font-bold text-lg text-slate-800 dark:text-white">كشف حساب مشترك</h4></div>
+                    <p class="text-slate-500 text-sm mb-4">عرض حركة مشترك محدد بالتفصيل.</p>
+                    <button onclick="generateMemberReport()" class="btn-primary w-full py-2 rounded-lg font-semibold">عرض التقرير</button>
+                </div>
+                <div class="card rounded-2xl p-6 hover:border-teal-500 transition md:col-span-2">
+                    <div class="flex items-center mb-4"><div class="p-3 bg-amber-100 text-amber-600 rounded-xl ml-4"><i class="fas fa-file-excel text-xl"></i></div><h4 class="font-bold text-lg text-slate-800 dark:text-white">تصدير Excel</h4></div>
+                    <p class="text-slate-500 text-sm mb-4">تصدير كامل البيانات إلى ملف إكسل.</p>
+                    <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white w-full py-2 rounded-lg font-semibold transition">تصدير الآن</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Backup -->
+        <div id="view-backup" class="view-section hidden">
+            <div class="mb-8"><h2 class="text-3xl font-extrabold text-slate-800 dark:text-white">النسخ الاحتياطي</h2><p class="text-slate-500 mt-1">حماية بياناتك من الفقدان</p></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card rounded-2xl p-8 text-center">
+                    <div class="w-20 h-20 mx-auto bg-teal-100 text-teal-600 rounded-full flex items-center justify-center mb-4"><i class="fas fa-download text-3xl"></i></div>
+                    <h3 class="font-bold text-xl mb-2 text-slate-800 dark:text-white">تنزيل نسخة احتياطية</h3>
+                    <p class="text-slate-500 text-sm mb-6">حفظ كامل بيانات البرنامج في ملف آمن بصيغة JSON.</p>
+                    <button onclick="createBackup()" class="btn-primary px-8 py-3 rounded-xl font-bold">إنشاء نسخة</button>
+                </div>
+                <div class="card rounded-2xl p-8 text-center">
+                    <div class="w-20 h-20 mx-auto bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mb-4"><i class="fas fa-upload text-3xl"></i></div>
+                    <h3 class="font-bold text-xl mb-2 text-slate-800 dark:text-white">استعادة نسخة احتياطية</h3>
+                    <p class="text-slate-500 text-sm mb-6">رفع ملف JSON لاستعادة البيانات السابقة.</p>
+                    <input type="file" id="restore-file" accept=".json" class="hidden">
+                    <button onclick="document.getElementById('restore-file').click()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold transition">اختيار ملف</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div id="view-settings" class="view-section hidden">
+            <div class="mb-8"><h2 class="text-3xl font-extrabold text-slate-800 dark:text-white">الإعدادات العامة</h2><p class="text-slate-500 mt-1">تخصيص البرنامج حسب احتياجاتك</p></div>
+            <div class="card rounded-2xl p-8 max-w-3xl mx-auto">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">اسم الصندوق</label><input type="text" id="setting-fund-name" class="input-field" value="صندوق المقبرة والشادر"></div>
+                    <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">العنوان</label><input type="text" id="setting-address" class="input-field" value="قرية الحرية"></div>
+                    <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">السنة المالية</label><input type="number" id="setting-fiscal-year" class="input-field" value="1448"></div>
+                    <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">العملة الافتراضية</label><select id="setting-default-currency" class="input-field"><option value="SYP">الليرة السورية (SYP)</option><option value="USD">الدولار الأمريكي (USD)</option></select></div>
+                    <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">سعر صرف الدولار (ل.س)</label><input type="number" id="setting-usd-rate" class="input-field" value="15000" step="100"></div>
+                    <div class="md:col-span-2">
+                        <label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">الختم الإلكتروني (صورة)</label>
+                        <input type="file" id="stamp-upload" accept="image/*" class="input-field" onchange="handleStampUpload(event)">
+                        <div id="stamp-preview-container" class="stamp-preview mt-2">
+                            <img id="stamp-preview-img" src="" alt="معاينة الختم" style="display:none;">
+                        </div>
+                        <button onclick="clearStamp()" class="text-red-500 text-sm mt-1 hover:underline">إزالة الختم</button>
+                    </div>
+                </div>
+                <div class="mt-8 flex flex-wrap gap-4 justify-end">
+                    <button onclick="saveSettings()" class="btn-primary px-8 py-3 rounded-xl font-bold">حفظ الإعدادات</button>
+                    <button onclick="clearAllData()" class="btn-danger px-8 py-3 rounded-xl font-bold flex items-center"><i class="fas fa-trash-alt ml-2"></i> حذف جميع البيانات</button>
+                </div>
+                <p class="text-xs text-red-500 mt-4 text-center">⚠️ حذف جميع البيانات سيؤدي إلى فقدان كل المعلومات بشكل نهائي.</p>
+            </div>
+        </div>
+
+    </main>
+
+
+    <!-- شريط التنقل السفلي للهاتف -->
+    <nav class="mobile-bottom-nav no-print" aria-label="التنقل الرئيسي">
+        <button class="mobile-nav-item active" data-mobile-view="dashboard" onclick="switchView('dashboard')"><i class="fas fa-home"></i><span>الرئيسية</span></button>
+        <button class="mobile-nav-item" data-mobile-view="members" onclick="switchView('members')"><i class="fas fa-users"></i><span>المشتركون</span></button>
+        <button class="mobile-nav-item" data-mobile-view="receipts" onclick="switchView('receipts')"><i class="fas fa-arrow-down"></i><span>القبض</span></button>
+        <button class="mobile-nav-item" data-mobile-view="payments" onclick="switchView('payments')"><i class="fas fa-arrow-up"></i><span>الصرف</span></button>
+        <button class="mobile-nav-item" data-mobile-view="more" onclick="openMoreMenu()"><i class="fas fa-th-large"></i><span>المزيد</span></button>
+    </nav>
+
+    <div class="mobile-more-sheet no-print" id="mobile-more-sheet" onclick="closeMoreMenu(event)">
+        <div class="mobile-more-panel" onclick="event.stopPropagation()">
+            <div class="more-handle"></div>
+            <div class="more-title">كل أقسام البرنامج</div>
+            <div class="more-grid">
+                <button class="more-link" onclick="switchView('cemetery');closeMoreMenu()"><i class="fas fa-mosque"></i>قسم المقبرة</button>
+                <button class="more-link" onclick="switchView('shadar');closeMoreMenu()"><i class="fas fa-archway"></i>قسم الشادر</button>
+                <button class="more-link" onclick="switchView('reports');closeMoreMenu()"><i class="fas fa-chart-pie"></i>التقارير</button>
+                <button class="more-link" onclick="switchView('backup');closeMoreMenu()"><i class="fas fa-database"></i>النسخ الاحتياطي</button>
+                <button class="more-link" onclick="switchView('settings');closeMoreMenu()"><i class="fas fa-cog"></i>الإعدادات</button>
+                <button class="more-link pwa-install-btn" id="pwa-install-btn" onclick="installPWA()"><i class="fas fa-download"></i>تثبيت التطبيق</button>
+                <button class="more-link" onclick="showAboutApp();closeMoreMenu()"><i class="fas fa-info-circle"></i>حول البرنامج</button>
+                <button class="more-link" onclick="toggleTheme();closeMoreMenu()"><i class="fas fa-moon"></i>الوضع الليلي</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="mobile-search-panel no-print" id="mobile-search-panel">
+        <div class="mobile-search-row">
+            <input id="mobile-search-input" class="input-field" type="search" placeholder="ابحث في القسم الحالي..." oninput="runMobileSearch(this.value)">
+            <button onclick="closeMobileSearch()" aria-label="إغلاق البحث"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+
+    <div class="pwa-status no-print" id="pwa-status"><span class="dot"></span><span id="pwa-status-text">يعمل دون اتصال</span></div>
+
+    <!-- Footer -->
+    <footer class="footer no-print">
+        <div class="max-w-[1600px] mx-auto px-4">
+            <p>مصمم البرنامج: <span>الشيخ علي العثمان</span> - ١٤٤٨هـ</p>
+            <p class="text-xs mt-1">جميع الحقوق محفوظة ©</p>
+        </div>
+    </footer>
+
+    <!-- Modal -->
+    <div id="modal-container" class="fixed inset-0 z-[100] hidden justify-center items-center modal-bg p-4">
+        <div class="modal-content card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="p-5 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center sticky top-0 bg-inherit z-10">
+                <h3 id="modal-title" class="font-bold text-xl text-slate-800 dark:text-white">عنوان النافذة</h3>
+                <button onclick="closeModal()" class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <div id="modal-body" class="p-6"></div>
+        </div>
+    </div>
+
+    <script>
+        // ------------------- قاعدة البيانات (localStorage) -------------------
+        const DB = {
+            get: (key) => JSON.parse(localStorage.getItem('hr_db_' + key)) || [],
+            set: (key, val) => localStorage.setItem('hr_db_' + key, JSON.stringify(val)),
+            clearAll: () => {
+                localStorage.removeItem('hr_db_members');
+                localStorage.removeItem('hr_db_receipts');
+                localStorage.removeItem('hr_db_payments');
+                localStorage.removeItem('hr_db_settings');
+                localStorage.removeItem('hr_db_stamp');
+            }
+        };
+
+        const DEFAULT_SETTINGS = {
+            fundName: 'صندوق المقبرة والشادر',
+            address: 'قرية الحرية',
+            fiscalYear: 1448,
+            defaultCurrency: 'SYP',
+            usdRate: 15000
+        };
+
+        let charts = {};
+        let currentEditId = null;
+        let currentTransactionType = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (localStorage.getItem('theme') === 'dark') document.documentElement.classList.add('dark');
+            loadSettings();
+            loadStampPreview();
+            updateDashboard();
+            renderMembers();
+            renderTransactions();
+            renderCemeteryTransactions();
+            renderShadarTransactions();
+        });
+
+        // ------------------- إدارة الختم الإلكتروني -------------------
+        function getStamp() {
+            return localStorage.getItem('hr_db_stamp') || null;
+        }
+
+        function setStamp(base64) {
+            localStorage.setItem('hr_db_stamp', base64);
+        }
+
+        function handleStampUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const base64 = event.target.result;
+                setStamp(base64);
+                showStampPreview(base64);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function showStampPreview(src) {
+            const img = document.getElementById('stamp-preview-img');
+            if (src) {
+                img.src = src;
+                img.style.display = 'block';
+            } else {
+                img.style.display = 'none';
+                img.src = '';
+            }
+        }
+
+        function loadStampPreview() {
+            const stamp = getStamp();
+            if (stamp) {
+                showStampPreview(stamp);
+            } else {
+                showStampPreview(null);
+            }
+        }
+
+        function clearStamp() {
+            localStorage.removeItem('hr_db_stamp');
+            showStampPreview(null);
+            document.getElementById('stamp-upload').value = '';
+        }
+
+        // ------------------- إدارة الإعدادات -------------------
+        function getSettings() {
+            const saved = localStorage.getItem('hr_db_settings');
+            if (saved) {
+                try { return JSON.parse(saved); } catch (e) { /* ignore */ }
+            }
+            return { ...DEFAULT_SETTINGS };
+        }
+
+        function saveSettingsToDB(settings) {
+            localStorage.setItem('hr_db_settings', JSON.stringify(settings));
+        }
+
+        function loadSettings() {
+            const settings = getSettings();
+            document.getElementById('setting-fund-name').value = settings.fundName || DEFAULT_SETTINGS.fundName;
+            document.getElementById('setting-address').value = settings.address || DEFAULT_SETTINGS.address;
+            document.getElementById('setting-fiscal-year').value = settings.fiscalYear || DEFAULT_SETTINGS.fiscalYear;
+            document.getElementById('setting-default-currency').value = settings.defaultCurrency || DEFAULT_SETTINGS.defaultCurrency;
+            document.getElementById('setting-usd-rate').value = settings.usdRate || DEFAULT_SETTINGS.usdRate;
+        }
+
+        function saveSettings() {
+            const settings = {
+                fundName: document.getElementById('setting-fund-name').value.trim(),
+                address: document.getElementById('setting-address').value.trim(),
+                fiscalYear: parseInt(document.getElementById('setting-fiscal-year').value) || 2024,
+                defaultCurrency: document.getElementById('setting-default-currency').value,
+                usdRate: parseFloat(document.getElementById('setting-usd-rate').value) || 15000
+            };
+            saveSettingsToDB(settings);
+            alert('تم حفظ الإعدادات بنجاح!');
+            updateDashboard();
+        }
+
+        // ------------------- دوال مساعدة -------------------
+        function generateId(arr) {
+            return arr.length > 0 ? Math.max(...arr.map(item => item.id)) + 1 : 1;
+        }
+
+        function getFundBadgeClass(fund) {
+            if (fund === 'المقبرة') return 'badge-fund-cemetery';
+            if (fund === 'الشادر') return 'badge-fund-shadar';
+            return 'badge-fund-general';
+        }
+
+        function formatCurrency(amount, currency) {
+            if (currency === 'USD') return amount.toLocaleString() + ' $';
+            return amount.toLocaleString() + ' ل.س';
+        }
+
+        // ------------------- تحديث لوحة التحكم -------------------
+        function updateDashboard() {
+            const receipts = DB.get('receipts');
+            const payments = DB.get('payments');
+            const members = DB.get('members');
+            const settings = getSettings();
+            const usdRate = settings.usdRate || 15000;
+
+            let sypBalance = 0,
+                usdBalance = 0;
+            let cemeteryInc = 0,
+                cemeteryExp = 0,
+                shadarInc = 0,
+                shadarExp = 0;
+            let todayExpenses = 0;
+            const today = new Date().toISOString().split('T')[0];
+
+            receipts.forEach(r => {
+                const amount = r.amount || 0;
+                if (r.currency === 'SYP') {
+                    sypBalance += amount;
+                    if (r.fund === 'المقبرة') cemeteryInc += amount;
+                    else if (r.fund === 'الشادر') shadarInc += amount;
+                } else {
+                    usdBalance += amount;
+                    const converted = amount * usdRate;
+                    if (r.fund === 'المقبرة') cemeteryInc += converted;
+                    else if (r.fund === 'الشادر') shadarInc += converted;
+                }
+            });
+
+            payments.forEach(p => {
+                const amount = p.amount || 0;
+                if (p.currency === 'SYP') {
+                    sypBalance -= amount;
+                    if (p.fund === 'المقبرة') cemeteryExp += amount;
+                    else if (p.fund === 'الشادر') shadarExp += amount;
+                } else {
+                    usdBalance -= amount;
+                    const converted = amount * usdRate;
+                    if (p.fund === 'المقبرة') cemeteryExp += converted;
+                    else if (p.fund === 'الشادر') shadarExp += converted;
+                }
+                if (p.date === today) {
+                    todayExpenses += p.currency === 'USD' ? amount * usdRate : amount;
+                }
+            });
+
+            document.getElementById('balance-syp').innerText = sypBalance.toLocaleString() + ' ل.س';
+            document.getElementById('balance-usd').innerText = usdBalance.toLocaleString() + ' $';
+            document.getElementById('total-members').innerText = members.length;
+            document.getElementById('today-expenses').innerText = todayExpenses.toLocaleString();
+
+            document.getElementById('cemetery-income').innerHTML = cemeteryInc.toLocaleString() + ' <span class="text-sm">ل.س</span>';
+            document.getElementById('cemetery-expense').innerHTML = cemeteryExp.toLocaleString() + ' <span class="text-sm">ل.س</span>';
+            const maintenanceCount = payments.filter(p => p.statement && p.statement.includes('صيانة')).length;
+            document.getElementById('cemetery-maintenance').innerText = maintenanceCount + ' عملية';
+
+            document.getElementById('shadar-income').innerHTML = shadarInc.toLocaleString() + ' <span class="text-sm">ل.س</span>';
+            document.getElementById('shadar-expense').innerHTML = shadarExp.toLocaleString() + ' <span class="text-sm">ل.س</span>';
+            const equipmentCount = payments.filter(p => p.statement && p.statement.includes('تجهيز')).length;
+            document.getElementById('shadar-equipment').innerText = equipmentCount + ' صنف';
+
+            updateCharts(receipts, payments);
+        }
+
+        function updateCharts(receipts, payments) {
+            if (typeof Chart === 'undefined') return;
+            const months = [];
+            const now = new Date();
+            for (let i = 5; i >= 0; i--) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+                months.push(d);
+            }
+            const monthLabels = months.map(d => d.toLocaleDateString('ar-EG', { month: 'short', year: 'numeric' }));
+
+            const incomeData = months.map(m => {
+                const start = new Date(m.getFullYear(), m.getMonth(), 1);
+                const end = new Date(m.getFullYear(), m.getMonth() + 1, 0);
+                let total = 0;
+                receipts.forEach(r => {
+                    const rDate = new Date(r.date);
+                    if (rDate >= start && rDate <= end) total += r.amount;
+                });
+                return total;
+            });
+
+            const expenseData = months.map(m => {
+                const start = new Date(m.getFullYear(), m.getMonth(), 1);
+                const end = new Date(m.getFullYear(), m.getMonth() + 1, 0);
+                let total = 0;
+                payments.forEach(p => {
+                    const pDate = new Date(p.date);
+                    if (pDate >= start && pDate <= end) total += p.amount;
+                });
+                return total;
+            });
+
+            const ctx1 = document.getElementById('cashFlowChart').getContext('2d');
+            if (charts.cf) charts.cf.destroy();
+            charts.cf = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: [
+                        { label: 'الإيرادات', data: incomeData, borderColor: '#0d9488',
+                            backgroundColor: 'rgba(13, 148, 136, 0.1)', fill: true, tension: 0.4 },
+                        { label: 'المصروفات', data: expenseData, borderColor: '#ef4444',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)', fill: true, tension: 0.4 }
+                    ]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'top', rtl: true } } }
+            });
+
+            const categories = {};
+            receipts.forEach(r => {
+                const cat = r.category || 'أخرى';
+                categories[cat] = (categories[cat] || 0) + r.amount;
+            });
+            const catLabels = Object.keys(categories);
+            const catValues = Object.values(categories);
+            const colors = ['#0d9488', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899', '#14b8a6'];
+
+            const ctx2 = document.getElementById('incomeTypeChart').getContext('2d');
+            if (charts.it) charts.it.destroy();
+            charts.it = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: catLabels,
+                    datasets: [{ data: catValues, backgroundColor: colors.slice(0, catLabels.length), borderWidth: 0 }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom', rtl: true } },
+                    cutout: '70%' }
+            });
+        }
+
+        // ------------------- عرض المشتركين -------------------
+        function renderMembers() {
+            const members = DB.get('members');
+            const tbody = document.getElementById('members-table-body');
+            if (members.length === 0) {
+                tbody.innerHTML =
+                    `<tr><td colspan="6" class="empty-state"><i class="fas fa-folder-open text-4xl mb-3 block"></i>لا يوجد مشتركون بعد. ابدأ بإضافة مشترك جديد.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = members.map(m => `
+                    <tr data-member-id="${m.id}">
+                        <td class="p-4 font-bold text-teal-600">${m.id}</td>
+                        <td class="p-4 font-semibold">${m.name || ''}</td>
+                        <td class="p-4 text-slate-500">${m.phone || ''}</td>
+                        <td class="p-4"><span class="px-3 py-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 rounded-full text-xs font-semibold">${m.subscription || 'غير محدد'}</span></td>
+                        <td class="p-4"><span class="px-3 py-1 ${m.status === 'فعال' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'} rounded-full text-xs font-semibold">${m.status || 'غير محدد'}</span></td>
+                        <td class="p-4 text-center">
+                            <button onclick="openMemberModal(${m.id})" class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteMember(${m.id})" class="text-red-500 hover:text-red-700 mx-1"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+        }
+
+        // بحث المشتركين
+        function searchMembers() {
+            const query = document.getElementById('search-members').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#members-table tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // ------------------- عرض المعاملات -------------------
+        function renderTransactions() {
+            const receipts = DB.get('receipts');
+            const rTbody = document.getElementById('receipts-table-body');
+            if (receipts.length === 0) {
+                rTbody.innerHTML =
+                    `<tr><td colspan="8" class="empty-state"><i class="fas fa-folder-open text-4xl mb-3 block"></i>لا توجد سندات قبض بعد.</td></tr>`;
+            } else {
+                rTbody.innerHTML = receipts.map(r => `
+                        <tr data-receipt-id="${r.id}">
+                            <td class="p-4 font-bold text-teal-600">${r.id}</td>
+                            <td class="p-4 text-slate-500">${r.date || ''}</td>
+                            <td class="p-4 font-semibold">${r.payer || ''}</td>
+                            <td class="p-4 text-slate-500">${r.statement || ''}</td>
+                            <td class="p-4 font-bold text-green-600">${(r.amount || 0).toLocaleString()}</td>
+                            <td class="p-4"><span class="text-xs font-bold ${r.currency === 'SYP' ? 'text-teal-600' : 'text-blue-600'}">${r.currency || 'SYP'}</span></td>
+                            <td class="p-4"><span class="badge-fund ${getFundBadgeClass(r.fund)}">${r.fund || 'عام'}</span></td>
+                            <td class="p-4 text-center">
+                                <button onclick="openTransactionModal('receipt', ${r.id})" class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteTransaction('receipt', ${r.id})" class="text-red-500 hover:text-red-700 mx-1"><i class="fas fa-trash"></i></button>
+                                <button onclick="printVoucher(${r.id}, 'receipt')" class="text-teal-500 hover:text-teal-700 mx-1"><i class="fas fa-print"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+            }
+
+            const payments = DB.get('payments');
+            const pTbody = document.getElementById('payments-table-body');
+            if (payments.length === 0) {
+                pTbody.innerHTML =
+                    `<tr><td colspan="8" class="empty-state"><i class="fas fa-folder-open text-4xl mb-3 block"></i>لا توجد سندات صرف بعد.</td></tr>`;
+            } else {
+                pTbody.innerHTML = payments.map(p => `
+                        <tr data-payment-id="${p.id}">
+                            <td class="p-4 font-bold text-red-600">${p.id}</td>
+                            <td class="p-4 text-slate-500">${p.date || ''}</td>
+                            <td class="p-4 font-semibold">${p.beneficiary || ''}</td>
+                            <td class="p-4 text-slate-500">${p.statement || ''}</td>
+                            <td class="p-4 font-bold text-red-600">${(p.amount || 0).toLocaleString()}</td>
+                            <td class="p-4"><span class="text-xs font-bold ${p.currency === 'SYP' ? 'text-teal-600' : 'text-blue-600'}">${p.currency || 'SYP'}</span></td>
+                            <td class="p-4"><span class="badge-fund ${getFundBadgeClass(p.fund)}">${p.fund || 'عام'}</span></td>
+                            <td class="p-4 text-center">
+                                <button onclick="openTransactionModal('payment', ${p.id})" class="text-blue-500 hover:text-blue-700 mx-1"><i class="fas fa-edit"></i></button>
+                                <button onclick="deleteTransaction('payment', ${p.id})" class="text-red-500 hover:text-red-700 mx-1"><i class="fas fa-trash"></i></button>
+                                <button onclick="printVoucher(${p.id}, 'payment')" class="text-teal-500 hover:text-teal-700 mx-1"><i class="fas fa-print"></i></button>
+                            </td>
+                        </tr>
+                    `).join('');
+            }
+        }
+
+        // بحث سندات القبض
+        function searchReceipts() {
+            const query = document.getElementById('search-receipts').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#receipts-table tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // بحث سندات الصرف
+        function searchPayments() {
+            const query = document.getElementById('search-payments').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#payments-table tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // ------------------- عرض معاملات المقبرة والشادر -------------------
+        function getCombinedTransactions(fund) {
+            const receipts = DB.get('receipts').filter(r => r.fund === fund);
+            const payments = DB.get('payments').filter(p => p.fund === fund);
+            const all = [];
+            receipts.forEach(r => all.push({
+                ...r,
+                type: 'قبض',
+                person: r.payer || '',
+                sign: 1
+            }));
+            payments.forEach(p => all.push({
+                ...p,
+                type: 'صرف',
+                person: p.beneficiary || '',
+                sign: -1
+            }));
+            all.sort((a, b) => (a.date < b.date ? 1 : -1));
+            return all;
+        }
+
+        function renderCemeteryTransactions() {
+            const data = getCombinedTransactions('المقبرة');
+            const tbody = document.getElementById('cemetery-transactions-body');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state">لا توجد معاملات للمقبرة حتى الآن.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = data.map((t, idx) => `
+                    <tr data-cemetery-idx="${idx}">
+                        <td class="p-4">${idx + 1}</td>
+                        <td class="p-4 text-slate-500">${t.date || ''}</td>
+                        <td class="p-4 font-bold ${t.type === 'قبض' ? 'text-green-600' : 'text-red-600'}">${t.type}</td>
+                        <td class="p-4 font-semibold">${t.person}</td>
+                        <td class="p-4 text-slate-500">${t.statement || ''}</td>
+                        <td class="p-4 font-bold ${t.type === 'قبض' ? 'text-green-600' : 'text-red-600'}">${(t.amount || 0).toLocaleString()}</td>
+                        <td class="p-4"><span class="text-xs font-bold ${t.currency === 'SYP' ? 'text-teal-600' : 'text-blue-600'}">${t.currency || 'SYP'}</span></td>
+                    </tr>
+                `).join('');
+        }
+
+        function renderShadarTransactions() {
+            const data = getCombinedTransactions('الشادر');
+            const tbody = document.getElementById('shadar-transactions-body');
+            if (data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="7" class="empty-state">لا توجد معاملات للشادر حتى الآن.</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = data.map((t, idx) => `
+                    <tr data-shadar-idx="${idx}">
+                        <td class="p-4">${idx + 1}</td>
+                        <td class="p-4 text-slate-500">${t.date || ''}</td>
+                        <td class="p-4 font-bold ${t.type === 'قبض' ? 'text-green-600' : 'text-red-600'}">${t.type}</td>
+                        <td class="p-4 font-semibold">${t.person}</td>
+                        <td class="p-4 text-slate-500">${t.statement || ''}</td>
+                        <td class="p-4 font-bold ${t.type === 'قبض' ? 'text-green-600' : 'text-red-600'}">${(t.amount || 0).toLocaleString()}</td>
+                        <td class="p-4"><span class="text-xs font-bold ${t.currency === 'SYP' ? 'text-teal-600' : 'text-blue-600'}">${t.currency || 'SYP'}</span></td>
+                    </tr>
+                `).join('');
+        }
+
+        // بحث معاملات المقبرة
+        function searchCemetery() {
+            const query = document.getElementById('search-cemetery').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#cemetery-transactions-table tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // بحث معاملات الشادر
+        function searchShadar() {
+            const query = document.getElementById('search-shadar').value.toLowerCase().trim();
+            const rows = document.querySelectorAll('#shadar-transactions-table tbody tr');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // تحديث عند التبديل بين التبويبات
+        function switchView(viewName) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
+            const target = document.getElementById('view-' + viewName);
+            if (target) target.classList.remove('hidden');
+            document.querySelectorAll('.nav-tab').forEach(n => n.classList.remove('active'));
+            const navBtn = document.querySelector(`.nav-tab[data-view="${viewName}"]`);
+            if (navBtn) navBtn.classList.add('active');
+
+            document.querySelectorAll('.mobile-nav-item').forEach(n => n.classList.remove('active'));
+            const mobileBtn = document.querySelector(`.mobile-nav-item[data-mobile-view="${viewName}"]`);
+            if (mobileBtn) mobileBtn.classList.add('active');
+
+            try { localStorage.setItem('hr_last_view', viewName); } catch(e) {}
+            // إعادة تحميل الجداول الخاصة عند الحاجة
+            if (viewName === 'cemetery') renderCemeteryTransactions();
+            if (viewName === 'shadar') renderShadarTransactions();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ------------------- إدارة المشتركين -------------------
+        function openMemberModal(id = null) {
+            const members = DB.get('members');
+            const member = id ? members.find(m => m.id === id) : null;
+            currentEditId = id;
+            const title = id ? 'تعديل بيانات مشترك' : 'إضافة مشترك جديد';
+
+            openModal(title, `
+                    <div class="space-y-4">
+                        <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">الاسم الثلاثي</label><input type="text" id="m_name" class="input-field" value="${member?.name || ''}" placeholder="مثال: محمد أحمد الخالد"></div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">رقم الهاتف</label><input type="text" id="m_phone" class="input-field" value="${member?.phone || ''}" placeholder="09xxxxxxxx"></div>
+                            <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">الحالة</label>
+                                <select id="m_status" class="input-field">
+                                    <option value="فعال" ${member?.status === 'فعال' ? 'selected' : ''}>فعال</option>
+                                    <option value="موقوف" ${member?.status === 'موقوف' ? 'selected' : ''}>موقوف</option>
+                                    <option value="مؤرشف" ${member?.status === 'مؤرشف' ? 'selected' : ''}>مؤرشف</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">نوع الاشتراك</label>
+                                <select id="m_sub" class="input-field">
+                                    <option value="اشتراك قديم" ${member?.subscription === 'اشتراك قديم' ? 'selected' : ''}>اشتراك قديم</option>
+                                    <option value="اشتراك جديد" ${member?.subscription === 'اشتراك جديد' ? 'selected' : ''}>اشتراك جديد</option>
+                                    <option value="اشتراك قديم وجديد معاً" ${member?.subscription === 'اشتراك قديم وجديد معاً' ? 'selected' : ''}>اشتراك قديم وجديد معاً</option>
+                                </select>
+                            </div>
+                            <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">تاريخ التسجيل</label><input type="date" id="m_date" class="input-field" value="${member?.date || new Date().toISOString().slice(0,10)}"></div>
+                        </div>
+                        <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">ملاحظات</label><textarea id="m_notes" class="input-field" rows="2">${member?.notes || ''}</textarea></div>
+                        <div class="flex gap-3 pt-4">
+                            <button onclick="saveMember()" class="btn-primary flex-1 py-3 rounded-xl font-bold">حفظ</button>
+                            <button onclick="closeModal()" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-6 py-3 rounded-xl font-bold">إلغاء</button>
+                        </div>
+                    </div>
+                `);
+        }
+
+        function saveMember() {
+            let members = DB.get('members');
+            const data = {
+                name: document.getElementById('m_name').value.trim(),
+                phone: document.getElementById('m_phone').value.trim(),
+                status: document.getElementById('m_status').value,
+                subscription: document.getElementById('m_sub').value,
+                date: document.getElementById('m_date').value,
+                notes: document.getElementById('m_notes').value.trim()
+            };
+            if (!data.name || !data.phone) { alert("الرجاء إدخال الاسم ورقم الهاتف على الأقل."); return; }
+            if (currentEditId) {
+                const index = members.findIndex(m => m.id === currentEditId);
+                if (index !== -1) members[index] = { ...members[index], ...data };
+            } else {
+                data.id = generateId(members);
+                members.push(data);
+            }
+            DB.set('members', members);
+            renderMembers();
+            updateDashboard();
+            closeModal();
+        }
+
+        function deleteMember(id) {
+            if (!confirm("هل أنت متأكد من حذف هذا المشترك؟")) return;
+            let members = DB.get('members').filter(m => m.id !== id);
+            DB.set('members', members);
+            renderMembers();
+            updateDashboard();
+        }
+
+        // ------------------- إدارة المعاملات -------------------
+        function getMemberOptions(selectedName = '') {
+            const members = DB.get('members');
+            let options = '';
+            members.forEach(m => {
+                const sel = (m.name === selectedName) ? 'selected' : '';
+                options += `<option value="${m.name}" ${sel}>${m.name}</option>`;
+            });
+            const selOther = (selectedName && !members.some(m => m.name === selectedName)) ? 'selected' : '';
+            options += `<option value="__other__" ${selOther}>--- آخر (إدخال اسم جديد) ---</option>`;
+            return options;
+        }
+
+        function openTransactionModal(type, id = null) {
+            const dbKey = type === 'receipt' ? 'receipts' : 'payments';
+            const items = DB.get(dbKey);
+            const item = id ? items.find(i => i.id === id) : null;
+            currentEditId = id;
+            currentTransactionType = type;
+
+            const title = id ? `تعديل سند ${type === 'receipt' ? 'قبض' : 'صرف'}` : `سند ${type === 'receipt' ? 'قبض' : 'صرف'} جديد`;
+            const personLabel = type === 'receipt' ? 'الدافع' : 'المستفيد';
+            const categories = type === 'receipt' ?
+                ['الاشتراك الشهري', 'اشتراك الترميم', 'التبرعات', 'إيرادات المقبرة', 'إيرادات الشادر', 'إيراد آخر'] :
+                ['مصروفات المقبرة', 'مصروفات الشادر', 'مصروفات عامة', 'شراء تجهيزات', 'صيانة', 'أجور عمال', 'خدمات',
+                    'مصروف آخر'
+                ];
+            const colorClass = type === 'receipt' ? 'bg-green-600 hover:bg-green-700' :
+                'bg-red-600 hover:bg-red-700';
+            const nextId = id || generateId(items);
+
+            let currentPerson = '';
+            if (type === 'receipt') currentPerson = item?.payer || '';
+            else currentPerson = item?.beneficiary || '';
+
+            let personFieldHtml = '';
+            if (type === 'receipt') {
+                const opts = getMemberOptions(currentPerson);
+                personFieldHtml = `
+                        <div class="payer-select-wrapper">
+                            <label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">${personLabel}</label>
+                            <select id="t_person_select" class="input-field" onchange="togglePayerExtra()">
+                                ${opts}
+                            </select>
+                            <div id="extra_payer_container" class="extra-payer-input ${(currentPerson && !DB.get('members').some(m => m.name === currentPerson)) ? 'active' : ''}">
+                                <label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">الاسم الجديد</label>
+                                <input type="text" id="t_person_extra" class="input-field" value="${currentPerson}" placeholder="أدخل الاسم الكامل">
+                            </div>
+                        </div>
+                    `;
+            } else {
+                personFieldHtml = `
+                        <div>
+                            <label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">${personLabel}</label>
+                            <input type="text" id="t_person" class="input-field" value="${currentPerson}" placeholder="الاسم...">
+                        </div>
+                    `;
+            }
+
+            const fundFieldHtml = `
+                    <div>
+                        <label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">الصندوق التابع</label>
+                        <select id="t_fund" class="input-field">
+                            <option value="عام" ${(!item?.fund || item?.fund === 'عام') ? 'selected' : ''}>عام</option>
+                            <option value="المقبرة" ${item?.fund === 'المقبرة' ? 'selected' : ''}>المقبرة</option>
+                            <option value="الشادر" ${item?.fund === 'الشادر' ? 'selected' : ''}>الشادر</option>
+                        </select>
+                    </div>
+                `;
+
+            openModal(title, `
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">رقم السند</label><input type="text" value="${nextId}" disabled class="input-field !bg-slate-100 dark:!bg-slate-700 cursor-not-allowed"></div>
+                            <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">التاريخ</label><input type="date" id="t_date" class="input-field" value="${item?.date || new Date().toISOString().slice(0,10)}"></div>
+                        </div>
+                        ${personFieldHtml}
+                        ${fundFieldHtml}
+                        <div class="grid grid-cols-2 gap-4">
+                            <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">المبلغ</label><input type="number" id="t_amount" class="input-field" value="${item?.amount || ''}" placeholder="0.00" step="0.01"></div>
+                            <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">العملة</label>
+                                <select id="t_currency" class="input-field">
+                                    <option value="SYP" ${item?.currency === 'SYP' ? 'selected' : ''}>SYP (ل.س)</option>
+                                    <option value="USD" ${item?.currency === 'USD' ? 'selected' : ''}>USD ($)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">التصنيف</label>
+                            <select id="t_category" class="input-field">
+                                ${categories.map(c => `<option value="${c}" ${item?.category === c ? 'selected' : ''}>${c}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div><label class="block text-sm font-semibold mb-2 text-slate-600 dark:text-slate-300">البيان</label><textarea id="t_statement" class="input-field" rows="2">${item?.statement || ''}</textarea></div>
+                        <div class="flex gap-3 pt-4">
+                            <button onclick="saveTransaction('${type}')" class="${colorClass} text-white flex-1 py-3 rounded-xl font-bold transition">حفظ السند</button>
+                            <button onclick="closeModal()" class="bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 px-6 py-3 rounded-xl font-bold">إلغاء</button>
+                        </div>
+                    </div>
+                `);
+
+            if (type === 'receipt') togglePayerExtra();
+        }
+
+        function togglePayerExtra() {
+            const select = document.getElementById('t_person_select');
+            const container = document.getElementById('extra_payer_container');
+            if (select && container) {
+                if (select.value === '__other__') container.classList.add('active');
+                else container.classList.remove('active');
+            }
+        }
+
+        function saveTransaction(type) {
+            const dbKey = type === 'receipt' ? 'receipts' : 'payments';
+            let items = DB.get(dbKey);
+
+            const data = {
+                date: document.getElementById('t_date').value,
+                amount: parseFloat(document.getElementById('t_amount').value) || 0,
+                currency: document.getElementById('t_currency').value,
+                category: document.getElementById('t_category').value,
+                statement: document.getElementById('t_statement').value.trim(),
+                fund: document.getElementById('t_fund').value || 'عام'
+            };
+
+            let personName = '';
+            if (type === 'receipt') {
+                const select = document.getElementById('t_person_select');
+                if (select.value === '__other__') personName = document.getElementById('t_person_extra').value.trim();
+                else personName = select.value;
+                data.payer = personName;
+            } else {
+                personName = document.getElementById('t_person').value.trim();
+                data.beneficiary = personName;
+            }
+
+            if (!data.date || !data.amount || !personName) {
+                alert("الرجاء ملء الحقول الأساسية (التاريخ، الاسم، المبلغ).");
+                return;
+            }
+
+            if (currentEditId) {
+                const index = items.findIndex(i => i.id === currentEditId);
+                if (index !== -1) items[index] = { ...items[index], ...data };
+            } else {
+                data.id = generateId(items);
+                items.push(data);
+            }
+
+            DB.set(dbKey, items);
+            renderTransactions();
+            renderCemeteryTransactions();
+            renderShadarTransactions();
+            updateDashboard();
+            closeModal();
+        }
+
+        function deleteTransaction(type, id) {
+            if (!confirm("هل أنت متأكد من حذف هذا السند؟")) return;
+            const dbKey = type === 'receipt' ? 'receipts' : 'payments';
+            let items = DB.get(dbKey).filter(i => i.id !== id);
+            DB.set(dbKey, items);
+            renderTransactions();
+            renderCemeteryTransactions();
+            renderShadarTransactions();
+            updateDashboard();
+        }
+
+        // ------------------- البحث العام -------------------
+        function searchTable() {
+            const input = document.getElementById('global-search').value.toLowerCase().trim();
+            const activeView = document.querySelector('.view-section:not(.hidden)');
+            if (!activeView) return;
+            const tables = activeView.querySelectorAll('table');
+            tables.forEach(table => {
+                const rows = table.querySelectorAll('tbody tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(input) ? '' : 'none';
+                });
+            });
+        }
+
+        // ------------------- النسخ الاحتياطي -------------------
+        function createBackup() {
+            const data = {
+                members: DB.get('members'),
+                receipts: DB.get('receipts'),
+                payments: DB.get('payments'),
+                settings: getSettings(),
+                stamp: getStamp()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `backup_${new Date().toLocaleDateString('en-GB').replace(/\//g, '-')}.json`;
+            a.click();
+        }
+
+        document.getElementById('restore-file').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    if (data.members) DB.set('members', data.members);
+                    if (data.receipts) DB.set('receipts', data.receipts);
+                    if (data.payments) DB.set('payments', data.payments);
+                    if (data.settings) saveSettingsToDB(data.settings);
+                    if (data.stamp) setStamp(data.stamp);
+                    loadStampPreview();
+                    alert('تم استعادة النسخة الاحتياطية بنجاح!');
+                    loadSettings();
+                    updateDashboard();
+                    renderMembers();
+                    renderTransactions();
+                    renderCemeteryTransactions();
+                    renderShadarTransactions();
+                } catch (err) { alert('خطأ في قراءة الملف!'); }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        // ------------------- تصدير Excel -------------------
+        function exportToExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert('مكتبة Excel غير متاحة حالياً. افتح البرنامج مرة واحدة مع اتصال بالإنترنت ثم جرّب التصدير مجدداً.');
+                return;
+            }
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.get('members')), 'المشتركين');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.get('receipts')), 'سندات القبض');
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(DB.get('payments')), 'سندات الصرف');
+            XLSX.writeFile(wb, 'financial_report.xlsx');
+        }
+
+        // ------------------- طباعة السند (مع الختم واسم المحاسب) -------------------
+        function printVoucher(id, type) {
+            const dbKey = type === 'receipt' ? 'receipts' : 'payments';
+            const data = DB.get(dbKey).find(i => i.id === id);
+            if (!data) return;
+            const settings = getSettings();
+            const stamp = getStamp();
+            const fundName = settings.fundName || 'صندوق المقبرة والشادر';
+            const address = settings.address || 'قرية الحرية';
+            const accountant = 'الشيخ أحمد العثمان';
+
+            const win = window.open('', '', 'width=800,height=700');
+            if (!win) { alert('الرجاء السماح للنوافذ المنبثقة.'); return; }
+
+            win.document.write(`
+                    <html dir="rtl">
+                    <head><meta charset="UTF-8"><title>سند ${type === 'receipt' ? 'قبض' : 'صرف'}</title>
+                    <style>
+                        body { font-family: 'Cairo', Arial, sans-serif; padding:30px; direction:rtl; background:#fff; color:#000; }
+                        .header { text-align:center; border-bottom:2px solid #0d9488; padding-bottom:10px; margin-bottom:20px; position:relative; }
+                        .header h1 { margin:0; color:#0d9488; font-size:24px; }
+                        .header .sub { color:#475569; font-size:14px; }
+                        .details { margin:20px 0; }
+                        .details p { margin:6px 0; }
+                        .amount-box { font-size:22px; font-weight:bold; margin:20px 0; padding:10px; background:#f1f5f9; border-radius:8px; text-align:center; }
+                        .signature-area { display:flex; justify-content:space-between; margin-top:80px; align-items:flex-end; }
+                        .signature-item { text-align:center; }
+                        .signature-item .line { width:150px; border-bottom:1px solid #000; margin:5px auto; }
+                        .stamp-container { text-align:left; margin-top:20px; }
+                        .stamp-container img { max-width:120px; max-height:120px; border:1px solid #ccc; border-radius:8px; padding:4px; background:#fff; }
+                        .footer { margin-top:40px; text-align:center; font-size:12px; color:#999; border-top:1px solid #e2e8f0; padding-top:15px; }
+                        @media print { .no-print { display:none; } }
+                    </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>${fundName}</h1>
+                            <div class="sub">${address}</div>
+                            <h2 style="color:${type === 'receipt' ? 'green' : 'red'};">سند ${type === 'receipt' ? 'قبض' : 'صرف'}</h2>
+                        </div>
+                        <div class="details">
+                            <p><strong>رقم السند:</strong> ${data.id}</p>
+                            <p><strong>التاريخ:</strong> ${data.date}</p>
+                            <p><strong>${type === 'receipt' ? 'الدافع' : 'المستفيد'}:</strong> ${type === 'receipt' ? data.payer : data.beneficiary}</p>
+                            <p><strong>الصندوق التابع:</strong> ${data.fund || 'عام'}</p>
+                            <p><strong>البيان:</strong> ${data.statement}</p>
+                            <div class="amount-box">المبلغ: ${data.amount} ${data.currency}</div>
+                        </div>
+                        <div class="signature-area">
+                            <div class="signature-item">
+                                <div>توقيع المحاسب</div>
+                                <div class="line"></div>
+                                <div><strong>${accountant}</strong></div>
+                            </div>
+                            <div class="signature-item">
+                                <div>ختم الصندوق</div>
+                                <div class="line"></div>
+                                <div>${stamp ? '<img src="'+stamp+'" style="max-width:80px;max-height:80px;">' : '__________'}</div>
+                            </div>
+                        </div>
+                        <div class="footer">
+                            مصمم البرنامج: الشيخ علي العثمان - ١٤٤٨هـ
+                        </div>
+                    </body>
+                    </html>
+                `);
+            win.document.close();
+            win.focus();
+            win.print();
+            setTimeout(() => win.close(), 500);
+        }
+
+        // ------------------- دالة مساعدة لبناء نوافذ التقارير -------------------
+        function buildReportWindow(transactions, reportTitle, reportSubTitle, extraSummary = null) {
+            if (!transactions || transactions.length === 0) {
+                alert('لا توجد بيانات لعرضها في هذا التقرير.');
+                return;
+            }
+            const settings = getSettings();
+            const stamp = getStamp();
+            const accountant = 'الشيخ أحمد العثمان';
+            const fundName = settings.fundName || 'صندوق المقبرة والشادر';
+            const address = settings.address || 'قرية الحرية';
+
+            let totalInSYP = 0,
+                totalOutSYP = 0;
+            let totalInUSD = 0,
+                totalOutUSD = 0;
+            let runningSYP = 0,
+                runningUSD = 0;
+
+            const rows = transactions.map((t, idx) => {
+                const amount = t.amount || 0;
+                const type = t.type || (t.payer ? 'قبض' : 'صرف');
+                const sign = (type === 'قبض') ? 1 : -1;
+                const person = t.person || t.payer || t.beneficiary || '';
+                const currency = t.currency || 'SYP';
+                const isIn = sign === 1;
+                if (currency === 'SYP') {
+                    runningSYP += sign * amount;
+                    if (isIn) totalInSYP += amount;
+                    else totalOutSYP += amount;
+                } else {
+                    runningUSD += sign * amount;
+                    if (isIn) totalInUSD += amount;
+                    else totalOutUSD += amount;
+                }
+                const runningVal = (currency === 'SYP') ? runningSYP : runningUSD;
+                return `
+                        <tr>
+                            <td>${idx + 1}</td>
+                            <td>${t.date || ''}</td>
+                            <td style="color:${isIn ? '#0d9488' : '#dc2626'}; font-weight:bold;">${type}</td>
+                            <td>${person}</td>
+                            <td>${t.statement || ''}</td>
+                            <td>${t.category || ''}</td>
+                            <td>${t.fund || 'عام'}</td>
+                            <td style="color:${isIn ? '#0d9488' : '#dc2626'};">${amount.toLocaleString()}</td>
+                            <td>${currency}</td>
+                            <td>${runningVal.toLocaleString()} ${currency}</td>
+                        </tr>
+                    `;
+            }).join('');
+
+            let summaryHTML = `
+                        <div class="summary-item"><div class="label">إجمالي الإيرادات (ل.س)</div><div class="value text-green">${totalInSYP.toLocaleString()}</div></div>
+                        <div class="summary-item"><div class="label">إجمالي المصروفات (ل.س)</div><div class="value text-red">${totalOutSYP.toLocaleString()}</div></div>
+                        <div class="summary-item"><div class="label">صافي الرصيد (ل.س)</div><div class="value" style="color:#0d9488;">${(totalInSYP - totalOutSYP).toLocaleString()}</div></div>
+                        <div class="summary-item"><div class="label">إجمالي الإيرادات ($)</div><div class="value text-blue">${totalInUSD.toLocaleString()}</div></div>
+                        <div class="summary-item"><div class="label">إجمالي المصروفات ($)</div><div class="value text-red">${totalOutUSD.toLocaleString()}</div></div>
+                        <div class="summary-item"><div class="label">صافي الرصيد ($)</div><div class="value" style="color:#2563eb;">${(totalInUSD - totalOutUSD).toLocaleString()}</div></div>
+            `;
+            if (extraSummary) {
+                summaryHTML += extraSummary;
+            }
+
+            const win = window.open('', '', 'width=1200,height=800');
+            if (!win) { alert('الرجاء السماح للنوافذ المنبثقة.'); return; }
+
+            win.document.write(`
+                    <html dir="rtl">
+                    <head><meta charset="UTF-8"><title>${reportTitle}</title>
+                    <style>
+                        body { font-family: 'Cairo', Arial, sans-serif; padding:30px; direction:rtl; background:#fff; color:#000; }
+                        .header { text-align:center; border-bottom:2px solid #0d9488; padding-bottom:15px; margin-bottom:25px; }
+                        .header h1 { color:#0d9488; margin:0; font-size:28px; }
+                        .header .sub { color:#475569; font-size:14px; }
+                        table { width:100%; border-collapse:collapse; margin-top:20px; font-size:14px; }
+                        th { background:#f1f5f9; padding:10px 8px; border-bottom:2px solid #0d9488; }
+                        td { padding:8px; border-bottom:1px solid #e2e8f0; }
+                        .text-green { color:#0d9488; }
+                        .text-red { color:#dc2626; }
+                        .text-blue { color:#2563eb; }
+                        .summary-box { display:flex; justify-content:space-around; background:#f8fafc; padding:15px; border-radius:10px; margin:20px 0; flex-wrap:wrap; }
+                        .summary-item { text-align:center; margin:5px 10px; }
+                        .summary-item .label { font-weight:600; color:#475569; }
+                        .summary-item .value { font-size:20px; font-weight:800; }
+                        .signature-area { display:flex; justify-content:space-between; margin-top:80px; }
+                        .signature-item { text-align:center; }
+                        .signature-item .line { width:150px; border-bottom:1px solid #000; margin:5px auto; }
+                        .stamp-container img { max-width:100px; max-height:100px; border:1px solid #ccc; border-radius:8px; padding:4px; background:#fff; }
+                        .print-btn { margin-top:20px; padding:10px 25px; background:#0d9488; color:white; border:none; border-radius:8px; cursor:pointer; font-size:16px; }
+                        .print-btn:hover { background:#0f766e; }
+                        .footer { margin-top:40px; text-align:center; font-size:12px; color:#999; border-top:1px solid #e2e8f0; padding-top:15px; }
+                        @media print { .no-print { display:none; } }
+                    </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <h1>📊 ${reportTitle}</h1>
+                            <div class="sub">${fundName} - ${address}</div>
+                            <div class="sub">${reportSubTitle}</div>
+                            <div class="sub">تاريخ التقرير: ${new Date().toLocaleDateString('ar-EG')}</div>
+                        </div>
+                        <div class="summary-box">${summaryHTML}</div>
+                        <table>
+                            <thead><tr><th>#</th><th>التاريخ</th><th>النوع</th><th>الشخص</th><th>البيان</th><th>التصنيف</th><th>الصندوق</th><th>المبلغ</th><th>العملة</th><th>الرصيد التراكمي</th></tr></thead>
+                            <tbody>${rows || '<tr><td colspan="10" style="text-align:center;padding:30px;">لا توجد معاملات.</td></tr>'}</tbody>
+                        </table>
+                        <div class="signature-area">
+                            <div class="signature-item">
+                                <div>توقيع المحاسب</div>
+                                <div class="line"></div>
+                                <div><strong>${accountant}</strong></div>
+                            </div>
+                            <div class="signature-item">
+                                <div>ختم الصندوق</div>
+                                <div class="line"></div>
+                                <div>${stamp ? '<img src="'+stamp+'" style="max-width:80px;max-height:80px;">' : '__________'}</div>
+                            </div>
+                        </div>
+                        <div style="margin-top:15px;text-align:left;"><button class="print-btn" onclick="window.print()">🖨️ طباعة التقرير</button></div>
+                        <div class="footer">مصمم البرنامج: الشيخ علي العثمان - ١٤٤٨هـ</div>
+                    </body>
+                    </html>
+                `);
+            win.document.close();
+            win.focus();
+        }
+
+        // ------------------- تقارير منفصلة -------------------
+        function generateIncomeReport() {
+            const receipts = DB.get('receipts');
+            if (receipts.length === 0) { alert("لا توجد سندات قبض."); return; }
+            const transactions = receipts.map(r => ({
+                ...r,
+                type: 'قبض',
+                person: r.payer || '',
+                sign: 1
+            }));
+            transactions.sort((a, b) => (a.date < b.date ? 1 : -1));
+            buildReportWindow(transactions, 'تقرير الإيرادات', 'جميع سندات القبض');
+        }
+
+        function generateExpenseReport() {
+            const payments = DB.get('payments');
+            if (payments.length === 0) { alert("لا توجد سندات صرف."); return; }
+            const transactions = payments.map(p => ({
+                ...p,
+                type: 'صرف',
+                person: p.beneficiary || '',
+                sign: -1
+            }));
+            transactions.sort((a, b) => (a.date < b.date ? 1 : -1));
+            buildReportWindow(transactions, 'تقرير الصرفيات', 'جميع سندات الصرف');
+        }
+
+        function generateCemeteryReport() {
+            const receipts = DB.get('receipts').filter(r => r.fund === 'المقبرة');
+            const payments = DB.get('payments').filter(p => p.fund === 'المقبرة');
+            const all = [];
+            receipts.forEach(r => all.push({ ...r, type: 'قبض', person: r.payer || '', sign: 1 }));
+            payments.forEach(p => all.push({ ...p, type: 'صرف', person: p.beneficiary || '', sign: -1 }));
+            if (all.length === 0) { alert("لا توجد معاملات للمقبرة."); return; }
+            all.sort((a, b) => (a.date < b.date ? 1 : -1));
+            const totalIn = all.filter(t => t.sign === 1).reduce((s, t) => s + (t.amount || 0), 0);
+            const totalOut = all.filter(t => t.sign === -1).reduce((s, t) => s + (t.amount || 0), 0);
+            const extraSummary = `
+                        <div class="summary-item"><div class="label">إجمالي إيرادات المقبرة</div><div class="value text-green">${totalIn.toLocaleString()}</div></div>
+                        <div class="summary-item"><div class="label">إجمالي مصروفات المقبرة</div><div class="value text-red">${totalOut.toLocaleString()}</div></div>
+                        <div class="summary-item"><div class="label">صافي المقبرة</div><div class="value" style="color:#0d9488;">${(totalIn - totalOut).toLocaleString()}</div></div>
+                    `;
+            buildReportWindow(all, 'تقرير المقبرة', 'جميع معاملات المقبرة (قبض وصرف)', extraSummary);
+        }
+
+        function generateShadarReport() {
+            const receipts = DB.get('receipts').filter(r => r.fund === 'الشادر');
+            const payments = DB.get('payments').filter(p => p.fund === 'الشادر');
+            const all = [];
+            receipts.forEach(r => all.push({ ...r, type: 'قبض', person: r.payer || '', sign: 1 }));
+            payments.forEach(p => all.push({ ...p, type: 'صرف', person: p.beneficiary || '', sign: -1 }));
+            if (all.length === 0) { alert("لا توجد معاملات للشادر."); return; }
+            all.sort((a, b) => (a.date < b.date ? 1 : -1));
+            const totalIn = all.filter(t => t.sign === 1).reduce((s, t) => s + (t.amount || 0), 0);
+            const totalOut = all.filter(t => t.sign === -1).reduce((s, t) => s + (t.amount || 0), 0);
+            const extraSummary = `
+                        <div class="summary-item"><div class="label">إجمالي إيرادات الشادر</div><div class="value text-green">${totalIn.toLocaleString()}</div></div>
+                        <div class="summary-item"><div class="label">إجمالي مصروفات الشادر</div><div class="value text-red">${totalOut.toLocaleString()}</div></div>
+                        <div class="summary-item"><div class="label">صافي الشادر</div><div class="value" style="color:#0d9488;">${(totalIn - totalOut).toLocaleString()}</div></div>
+                    `;
+            buildReportWindow(all, 'تقرير الشادر', 'جميع معاملات الشادر (قبض وصرف)', extraSummary);
+        }
+
+        function generateReport() {
+            const receipts = DB.get('receipts');
+            const payments = DB.get('payments');
+            const all = [];
+            receipts.forEach(r => all.push({ ...r, type: 'قبض', person: r.payer || '', sign: 1 }));
+            payments.forEach(p => all.push({ ...p, type: 'صرف', person: p.beneficiary || '', sign: -1 }));
+            if (all.length === 0) { alert("لا توجد معاملات."); return; }
+            all.sort((a, b) => (a.date < b.date ? 1 : -1));
+            buildReportWindow(all, 'تقرير شامل (حركة الصندوق)', 'جميع المعاملات (قبض وصرف)');
+        }
+
+        function generateMemberReport() {
+            const members = DB.get('members');
+            if (members.length === 0) { alert("لا يوجد مشتركون."); return; }
+
+            let options = members.map(m => `<option value="${m.name}">${m.name}</option>`).join('');
+            const modalHtml = `
+                    <div class="space-y-4">
+                        <p class="text-slate-600 dark:text-slate-300">اختر المشترك:</p>
+                        <select id="memberSelect" class="input-field">${options}</select>
+                        <button onclick="showMemberStatement()" class="btn-primary w-full py-3 rounded-xl font-bold">عرض الكشف</button>
+                    </div>
+                `;
+            openModal('كشف حساب مشترك', modalHtml);
+
+            window.showMemberStatement = function() {
+                const select = document.getElementById('memberSelect');
+                if (!select) return;
+                const memberName = select.value;
+                closeModal();
+
+                const receipts = DB.get('receipts').filter(r => r.payer === memberName);
+                const payments = DB.get('payments').filter(p => p.beneficiary === memberName);
+                const all = [];
+                receipts.forEach(r => all.push({ ...r, type: 'قبض', person: r.payer, sign: 1 }));
+                payments.forEach(p => all.push({ ...p, type: 'صرف', person: p.beneficiary, sign: -1 }));
+                if (all.length === 0) { alert("لا توجد معاملات لهذا المشترك."); return; }
+                all.sort((a, b) => (a.date < b.date ? 1 : -1));
+                buildReportWindow(all, `كشف حساب المشترك: ${memberName}`, 'جميع المعاملات');
+            };
+        }
+
+        // ------------------- دوال عامة -------------------
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+        }
+
+        function openModal(title, htmlContent) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-body').innerHTML = htmlContent;
+            document.getElementById('modal-container').classList.remove('hidden');
+            document.getElementById('modal-container').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('modal-container').classList.add('hidden');
+            document.getElementById('modal-container').classList.remove('flex');
+            currentEditId = null;
+            currentTransactionType = null;
+        }
+
+        function clearAllData() {
+            if (!confirm("⚠️ تحذير: سيتم حذف جميع البيانات نهائياً. هل أنت متأكد؟")) return;
+            if (!confirm("تأكيد نهائي: هل تريد حقاً حذف كل شيء؟")) return;
+            DB.clearAll();
+            renderMembers();
+            renderTransactions();
+            renderCemeteryTransactions();
+            renderShadarTransactions();
+            updateDashboard();
+            loadSettings();
+            loadStampPreview();
+            alert("✅ تم حذف جميع البيانات بنجاح.");
+        }
+
+
+        // ================= PWA + واجهة الهاتف =================
+        let deferredInstallPrompt = null;
+
+        function arabicDateNow(){
+            const d = new Date();
+            return d.toLocaleDateString('ar-EG',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+        }
+        function refreshMobileHeader(){
+            const dateEl=document.getElementById('mobile-date-pill');
+            if(dateEl) dateEl.textContent=arabicDateNow();
+            const b=document.getElementById('mobile-balance');
+            const s=document.getElementById('balance-syp');
+            if(b && s) b.textContent=s.textContent;
+        }
+        function openMoreMenu(){
+            const el=document.getElementById('mobile-more-sheet');
+            if(el) el.classList.add('open');
+        }
+        function closeMoreMenu(event){
+            if(event && event.target && event.target.id!=='mobile-more-sheet') return;
+            const el=document.getElementById('mobile-more-sheet');
+            if(el) el.classList.remove('open');
+        }
+        function showAboutApp(){
+            openModal('حول البرنامج', `
+                <div class="about-app">
+                    <div style="text-align:center;margin-bottom:16px">
+                        <div style="width:72px;height:72px;margin:auto;border-radius:22px;background:linear-gradient(145deg,#174f3b,#c9a64d);color:#fff;display:grid;place-items:center;font-size:30px;box-shadow:0 10px 25px rgba(23,79,59,.22)">🕌</div>
+                        <h3 style="margin:12px 0 3px;font-size:21px">صندوق المقبرة والشادر</h3>
+                        <div style="color:#8c928e;font-size:12px">قرية الحرية • إصدار PWA ١٤٤٨هـ</div>
+                    </div>
+                    <p>برنامج مالي محلي لإدارة المشتركين وسندات القبض والصرف وأقسام المقبرة والشادر والتقارير والنسخ الاحتياطي.</p>
+                    <div style="background:#f5f7f4;border-radius:16px;padding:12px;margin-top:12px;font-size:13px">
+                        <strong>خصوصية البيانات:</strong> البيانات تحفظ محلياً على الجهاز باستخدام LocalStorage، ويمكن إنشاء نسخة احتياطية JSON واستعادتها.
+                    </div>
+                    <div style="text-align:center;color:#777;font-size:12px;margin-top:14px">مصمم البرنامج: الشيخ علي العثمان • ١٤٤٨هـ</div>
+                </div>
+            `);
+        }
+        function toggleFavorite(){
+            const active=localStorage.getItem('hr_favorite')==='1';
+            localStorage.setItem('hr_favorite',active?'0':'1');
+            const icon=document.getElementById('favorite-icon');
+            if(icon) icon.className=active?'far fa-heart':'fas fa-heart';
+        }
+        function openMobileSearch(){
+            const p=document.getElementById('mobile-search-panel');
+            const i=document.getElementById('mobile-search-input');
+            if(p){p.classList.add('open'); if(i) setTimeout(()=>i.focus(),80);}
+        }
+        function closeMobileSearch(){
+            const p=document.getElementById('mobile-search-panel');
+            const i=document.getElementById('mobile-search-input');
+            if(p) p.classList.remove('open');
+            if(i) i.value='';
+        }
+        function runMobileSearch(value){
+            const q=(value||'').toLowerCase().trim();
+            const active=document.querySelector('.view-section:not(.hidden)');
+            if(!active) return;
+            active.querySelectorAll('tbody tr').forEach(row=>{
+                row.style.display=row.textContent.toLowerCase().includes(q)?'':'none';
+            });
+        }
+        async function installPWA(){
+            if(!deferredInstallPrompt){
+                alert('إذا لم يظهر خيار التثبيت، افتح قائمة المتصفح ثم اختر «إضافة إلى الشاشة الرئيسية» أو «تثبيت التطبيق».');
+                return;
+            }
+            deferredInstallPrompt.prompt();
+            try { await deferredInstallPrompt.userChoice; } catch(e){}
+            deferredInstallPrompt=null;
+            const btn=document.getElementById('pwa-install-btn');
+            if(btn) btn.classList.remove('ready');
+        }
+
+        window.addEventListener('beforeinstallprompt',(e)=>{
+            e.preventDefault();
+            deferredInstallPrompt=e;
+            const btn=document.getElementById('pwa-install-btn');
+            if(btn) btn.classList.add('ready');
+        });
+        window.addEventListener('appinstalled',()=>{
+            deferredInstallPrompt=null;
+            const btn=document.getElementById('pwa-install-btn');
+            if(btn) btn.classList.remove('ready');
+            showPwaStatus('تم تثبيت التطبيق بنجاح');
+        });
+        function showPwaStatus(message){
+            const s=document.getElementById('pwa-status');
+            const t=document.getElementById('pwa-status-text');
+            if(s&&t){t.textContent=message;s.classList.add('show');setTimeout(()=>s.classList.remove('show'),3200);}
+        }
+        function updateOnlineStatus(){
+            showPwaStatus(navigator.onLine?'متصل بالإنترنت':'يعمل دون اتصال');
+        }
+        window.addEventListener('online',updateOnlineStatus);
+        window.addEventListener('offline',updateOnlineStatus);
+
+        if('serviceWorker' in navigator){
+            window.addEventListener('load',()=>{
+                navigator.serviceWorker.register('./sw.js').then(()=>{
+                    if(!navigator.onLine) showPwaStatus('يعمل دون اتصال');
+                }).catch(()=>{});
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded',()=>{
+            refreshMobileHeader();
+            const fav=localStorage.getItem('hr_favorite')==='1';
+            const icon=document.getElementById('favorite-icon');
+            if(icon) icon.className=fav?'fas fa-heart':'far fa-heart';
+            const last=localStorage.getItem('hr_last_view');
+            if(last && document.getElementById('view-'+last)) switchView(last);
+            updateOnlineStatus();
+            setTimeout(refreshMobileHeader,250);
+        });
+
+        // ربط الدوال بالـ window للاستخدام في الـ HTML
+        window.togglePayerExtra = togglePayerExtra;
+        window.showMemberStatement = window.showMemberStatement || function() {};
+        window.saveSettings = saveSettings;
+        window.handleStampUpload = handleStampUpload;
+        window.clearStamp = clearStamp;
+        window.generateIncomeReport = generateIncomeReport;
+        window.generateExpenseReport = generateExpenseReport;
+        window.generateCemeteryReport = generateCemeteryReport;
+        window.generateShadarReport = generateShadarReport;
+        window.generateReport = generateReport;
+        window.generateMemberReport = generateMemberReport;
+        window.exportToExcel = exportToExcel;
+        window.printVoucher = printVoucher;
+        window.searchMembers = searchMembers;
+        window.searchReceipts = searchReceipts;
+        window.searchPayments = searchPayments;
+        window.searchCemetery = searchCemetery;
+        window.searchShadar = searchShadar;
+        window.switchView = switchView;
+    </script>
+</body>
+</html>
